@@ -1,0 +1,119 @@
+<html>
+    <head>
+        <title>Decibelímetro</title>
+    </head>
+    <body>  
+        <div class="content">
+            <h1 style="margin-top: -4px;margin-bottom: 20px;">Medição de Ruído Ambiente</h1>
+            <label id="lastUpdate">Última atualização às</label>
+            <div id="myList"></div>
+            <table id="myTable">
+                <tr>
+                    <th>Data</th>
+                    <th>Hora</th>
+                    <th>dB</th>
+                </tr>             
+            </table>
+        </div>
+    </body>
+</html>
+
+<script type="text/javascript" src="./js/jquery.js"></script>
+<script type="text/javascript">
+    function concatAlgarism(num) {
+        if(num < 10) return "0" + num;
+        else return "" + num;
+    }
+
+    function updateLabel() {
+        var now = new Date();
+        var year = now.getFullYear();
+        var mon  = concatAlgarism(now.getMonth()+1);
+        var day  = concatAlgarism(now.getDate());
+        var hour = concatAlgarism(now.getHours());
+        var mins = concatAlgarism(now.getMinutes());
+        var secs = concatAlgarism(now.getSeconds());
+
+        var time = " <b>"+ hour +":"+ mins +":"+ secs +" </b>de<b> "+ day +"/"+ mon +"/"+ year+"</b>";
+        $("#lastUpdate").append(time);
+    }
+
+    $.ajax({
+        "url": "/read",
+        "method": "post",
+        "contentType": "application/json"
+    }).done(function(res){
+        if(res && res.data){
+            updateLabel();
+            var rows = res.data;
+            var qntOfRows = (rows.length < 12) ? rows.length : 12;
+            for(i = 0; i < qntOfRows; i++) {
+                row = rows[i].split(/T|-/);
+                if(row.indexOf(undefined) >= 0 || row.indexOf(null) >= 0 || row.indexOf("") >= 0)
+                    continue;
+
+                html = "<tr>";                
+                for(j=0; j<3; j++) {
+                    html += "<td>" + (j == 2 ? (row[j][1] + row[j][2]) :  row[j]) + "</td>";                    
+                }
+
+                $("#myTable").append(html+"</tr>");
+            }
+        }
+    });
+</script>
+
+<style type="text/css">
+.content{
+    width: 700px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+.search{
+    padding: 10px;
+    width: 100%;
+    border-radius: 5;
+    background: #eee
+}
+
+#myList{
+    padding: 5px;
+    /*margin-top: 10; */
+}
+
+table {
+    border-collapse: separate;
+    border-spacing: 2px;
+    font-size: 16px;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    display: table;
+    /*border-collapse: collapse;*/
+    width: 100%;
+    border-color: black;
+}
+
+tbody {
+    display: table-row-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+
+tr {
+    display: table-row;
+    vertical-align: inherit;
+    border-color: inherit;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+</style>
